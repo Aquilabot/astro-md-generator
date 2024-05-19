@@ -59,7 +59,7 @@ function extractNamesFromMarkdownTable(markdownTable, fileName) {
 }
 
 function generateMarkdownFile() {
-  fs.readdir(directory, { withFileTypes: true }, (err, files) => {
+  fs.readdir(directory, {withFileTypes: true}, (err, files) => {
     if (err) {
       console.error("Error reading the directory:", err);
       rl.close();
@@ -85,61 +85,61 @@ function generateMarkdownFile() {
 
     rl.question("Select a folder (number): ", (response) => {
       const option = parseInt(response);
-      if (option >= 1 && option <= folders.length) {
-        const chosenFolder = folders[option - 1];
-        console.log(`You've chosen the folder: ${chosenFolder} \n`);
-
-        const mdFiles = fs
-          .readdirSync(path.join(directory, chosenFolder))
-          .filter((file) => file.endsWith(".md") || file.endsWith(".mdx"));
-
-        if (mdFiles.length > 0) {
-          // Read the content of the first .md or .mdx file
-          const firstFile = mdFiles[0];
-          const filePath = path.join(directory, chosenFolder, firstFile);
-          const content = fs.readFileSync(filePath, "utf-8");
-
-          // Extract the Markdown table
-          const markdownTable = extractMarkdownTable(content);
-
-          if (markdownTable) {
-            rl.question(
-              "Enter a name for the new file (without extension): ",
-              (name) => {
-                const fileSlug = slugify(name);
-
-                const names = extractNamesFromMarkdownTable(
-                  markdownTable,
-                  name
-                );
-
-                const newContent = `---\n${names}\n---\n`; // New content with modified Markdown table
-
-                const newFilePath = path.join(
-                  directory,
-                  chosenFolder,
-                  `${fileSlug}.md`
-                );
-                fs.writeFileSync(newFilePath, newContent, "utf-8");
-
-                console.log(
-                  `The file '${fileSlug}.md' has been created and saved in the folder ${directory}/${chosenFolder}/.`
-                );
-                rl.close();
-              }
-            );
-          } else {
-            console.log("Markdown format compatible with Astro not found.");
-            rl.close();
-          }
-        } else {
-          console.log("No .md or .mdx files found in the folder.");
-          rl.close();
-        }
-      } else {
+      if (!(option >= 1 && option <= folders.length)) {
         console.log("Invalid selection. Please try again.");
         rl.close();
+        return;
       }
+      const chosenFolder = folders[option - 1];
+      console.log(`You've chosen the folder: ${chosenFolder} \n`);
+
+      const mdFiles = fs
+        .readdirSync(path.join(directory, chosenFolder))
+        .filter((file) => file.endsWith(".md") || file.endsWith(".mdx"));
+
+      if (mdFiles.length <= 0) {
+        console.log("No .md or .mdx files found in the folder.");
+        rl.close();
+        return;
+      }
+      // Read the content of the first .md or .mdx file
+      const firstFile = mdFiles[0];
+      const filePath = path.join(directory, chosenFolder, firstFile);
+      const content = fs.readFileSync(filePath, "utf-8");
+
+      // Extract the Markdown table
+      const markdownTable = extractMarkdownTable(content);
+
+      if (!markdownTable) {
+        console.log("Markdown format compatible with Astro not found.");
+        rl.close();
+        return;
+      }
+      rl.question(
+        "Enter a name for the new file (without extension): ",
+        (name) => {
+          const fileSlug = slugify(name);
+
+          const names = extractNamesFromMarkdownTable(
+            markdownTable,
+            name
+          );
+
+          const newContent = `---\n${names}\n---\n`; // New content with modified Markdown table
+
+          const newFilePath = path.join(
+            directory,
+            chosenFolder,
+            `${fileSlug}.md`
+          );
+          fs.writeFileSync(newFilePath, newContent, "utf-8");
+
+          console.log(
+            `The file '${fileSlug}.md' has been created and saved in the folder ${directory}/${chosenFolder}/.`
+          );
+          rl.close();
+        }
+      );
     });
   });
 }
